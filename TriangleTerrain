@@ -1,0 +1,152 @@
+
+package Gabriel.INFO.S2;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+import static javafx.scene.paint.Color.GREEN;
+ 
+import java.io.IOException;
+import java.io.Writer;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import static javafx.scene.paint.Color.OLIVE;
+
+/**
+ *
+ * @author Utilisateur
+ */
+public class TriangleTerrain extends Treillis {
+
+    public Point S1;
+    public Point S2;
+    public Point S3;
+    
+    //private Segment S12 = new Segment(S1,S2);
+    //private Segment S13 = new Segment(S1,S3);
+    //private Segment S23 = new Segment(S2,S3);
+
+    public TriangleTerrain(Point S1, Point S2, Point S3, Color couleur) {
+        //super(couleur);
+        this.S1 = S1;
+        this.S2 = S2;
+        this.S3 = S3;
+    }
+    
+    public TriangleTerrain(Point S1, Point S2, Point S3) {
+        this(S1, S2, S3, Color.GREEN);
+    }
+        
+        
+    @Override
+    public String toString() {
+        return "{ "+S1+","+S2+","+S3+"}";
+    }
+
+    public static TriangleTerrain demandeTriangleTerrain() {
+        System.out.println("Sommet 1 : ");
+        Point S1 = Point.demandePoint();
+        System.out.println("Sommet 2 : ");
+        Point S2 = Point.demandePoint();
+        System.out.println("Sommet 3 : ");
+        Point S3 = Point.demandePoint();
+        return new TriangleTerrain(S1,S2,S3);
+    }
+
+    @Override
+    public double maxX() {
+        double MS12 =Math.max(this.S1.maxX(), this.S2.maxX());
+        double MS13 =Math.max(this.S1.maxX(), this.S3.maxX());
+        double MS23 =Math.max(this.S2.maxX(), this.S3.maxX());
+        double M1 = Math.max(MS12, MS13);
+        double M2 = Math.max(MS12, MS23);
+        return Math.max(MS12, MS23);
+    }
+
+    @Override
+    public double minX() {
+        double MS12 =Math.min(this.S1.minX(), this.S2.minX());
+        double MS13 =Math.min(this.S1.minX(), this.S3.minX());
+        double MS23 =Math.min(this.S2.minX(), this.S3.minX());
+        double M1 = Math.min(MS12, MS13);
+        double M2 = Math.min(MS12, MS23);
+        return Math.min(MS12, MS23);    }
+
+    @Override
+    public double maxY() {
+        double MS12 =Math.max(this.S1.maxY(), this.S2.maxY());
+        double MS13 =Math.max(this.S1.maxY(), this.S3.maxY());
+        double MS23 =Math.max(this.S2.maxY(), this.S3.maxY());
+        double M1 = Math.max(MS12, MS13);
+        double M2 = Math.max(MS12, MS23);
+        return Math.max(MS12, MS23);
+    }
+
+    @Override
+    public double minY() {
+        double MS12 =Math.min(this.S1.minY(), this.S2.minY());
+        double MS13 =Math.min(this.S1.minY(), this.S3.minY());
+        double MS23 =Math.min(this.S2.minY(), this.S3.minY());
+        double M1 = Math.min(MS12, MS13);
+        double M2 = Math.min(MS12, MS23);
+        return Math.min(MS12, MS23);
+    }
+    
+       
+    @Override
+    public double distancePoint(Point p) {
+        double x1 = this.S1.getPx();
+        double y1 = this.S1.getPy();
+        double x2 = this.S2.getPx();
+        double y2 = this.S2.getPy();
+        double x3 = p.getPx();
+        double y3 = p.getPy();
+        double up = ((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1))
+                / (Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        if (up < 0) {
+            return this.S1.distancePoint(p);
+        } else if (up > 1) {
+            return this.S2.distancePoint(p);
+        } else {
+            Point p4 = new Point(x1 + up * (x2 - x1),
+                    y1 + up * (y2 - y1));
+            return p4.distancePoint(p);
+        }
+    } 
+   
+    
+    @Override
+    public void dessine(GraphicsContext context) {
+        
+       context.setStroke(GREEN);
+       context.strokePolygon(new double[]{this.S1.getPx(), this.S2.getPx(), this.S3.getPx()},
+               new double[]{this.S1.getPy(), this.S2.getPy(), this.S3.getPy()}, 3);
+       
+       context.setFill(OLIVE);
+       context.fillPolygon(new double[]{this.S1.getPx(), this.S2.getPx(), this.S3.getPx()}, 
+               new double[]{this.S1.getPy(), this.S2.getPy(), this.S3.getPy()}, 3);
+       
+ }
+
+
+    @Override
+    public void save(Writer w, Numeroteur<Treillis> num) throws IOException {
+        if (!num.objExist(this)) {
+            int id = num.creeID(this);
+            this.S1.save(w, num);
+            this.S2.save(w, num);
+            this.S3.save(w, num);
+            w.append("TriangleTerrain;" + id + ";" +
+                    num.getID(this.S1) + ";" + num.getID(this.S2) +
+                     ";" + num.getID(this.S3) +"\n");
+        }
+    }
+
+    
+
+    
+   
+}
+

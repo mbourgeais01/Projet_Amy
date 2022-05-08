@@ -1,0 +1,144 @@
+package Gabriel.INFO.S2;
+
+import java.io.IOException;
+import java.io.Writer;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import recup.Lire;
+
+/**
+ *
+ * @author Utilisateur
+ */
+public class Noeuds extends FigureSimple {
+    private double Nx;
+    private double Ny;
+    
+    
+
+    public static double cote = 6;
+    public static int nbNoeuds = 0;
+    
+    public Noeuds(double Nx, double Ny, Color couleur) {
+        super(couleur);
+        this.Nx = Nx;
+        this.Ny = Ny;
+    }
+
+    public Noeuds(double Nx, double Ny) {
+        this(Nx, Ny, Color.GREEN);
+    }
+
+    public Noeuds() {
+        this(0, 0);
+    }
+
+    /**
+     * @return the px
+     */
+    public double getNx() {
+        return Nx;
+    }
+
+    /**
+     * @param px the px to set
+     */
+    public void setNx(double Nx) {
+        this.Nx = Nx;
+    }
+
+    /**
+     * @return the py
+     */
+    public double getNy() {
+        return Ny;
+    }
+
+    /**
+     * @param py the py to set
+     */
+    public void setNy(double Ny) {
+        this.Ny = Ny;
+    }
+    
+    
+    @Override
+    public String toString() {
+        return "(" + Nx + "," + Ny + ')';
+    }
+
+    public static Point demandeNoeuds() {
+        System.out.println("abscisse : ");
+        double Nx = Lire.d();
+        System.out.println("ordonnée : ");
+        double Ny = Lire.d();
+        return new Point(Nx, Ny);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    @Override
+    public double maxX() {
+        return this.Nx;
+    }
+
+    @Override
+    public double minX() {
+        return this.Nx;    
+    }
+
+    @Override
+    public double maxY() {
+        return this.Ny;
+    }
+
+    @Override
+    public double minY() {
+        return this.Ny;    
+    }
+
+   
+    public double distanceNoeuds(Noeuds n) {
+        double dx = this.Nx - n.Nx;
+        double dy = this.Ny - n.Ny;
+        return Math.sqrt(dx*dx+dy*dy);
+    }
+
+    @Override
+    public void dessine(GraphicsContext context) {
+        context.setFill(this.getCouleur());
+        context.fillRect(this.Nx-cote, this.Ny-cote, 2*cote, 2*cote);
+        nbNoeuds++;
+    }
+
+    @Override
+    public void dessineSelection(GraphicsContext context) {
+        //context.setFill(Figure.COULEUR_SELECTION);
+        //context.fillRect(this.Nx-cote, this.Ny-cote, 2*cote, 2*cote);
+    }
+
+    @Override
+    public void save(Writer w, Numeroteur<Figure> num) throws IOException {
+        if(! num.objExist(this)) {
+            int id = num.creeID(this);
+            w.append("Noeuds;"+id+";"+this.Nx+";"+this.Ny+
+                    ";" + FigureSimple.saveColor(this.getCouleur()) + "\n");
+        }}
+
+    @Override
+    public double distancePoint(Point p) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public int nbNoeuds(){
+        return nbNoeuds;
+    }
+
+   
+    
+}

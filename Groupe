@@ -1,0 +1,487 @@
+package Gabriel.INFO.S2;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.scene.canvas.GraphicsContext;
+import recup.Lire;
+
+/**
+ *
+ * author francois
+ **/
+public class Groupe extends Treillis {
+
+    private List<Treillis> contient;
+
+    public List<Treillis> getContient() {
+        return contient;
+    }
+
+    public Groupe() {
+        this.contient = new ArrayList<Treillis>();
+    }
+
+    public void add(Treillis f) {
+        if (f.getGroupe() != this) {
+            if (f.getGroupe() != null) {
+                throw new Error("Treillis déja dans un autre groupe");
+            }
+            this.contient.add(f);
+            f.setGroupe(this);
+        }
+    }
+
+    public void remove(Treillis f) {
+        if (f.getGroupe() != this) {
+            throw new Error("le Treillis n'est pas dans le groupe");
+        }
+        this.contient.remove(f);
+        f.setGroupe(null);
+    }
+
+    public void removeAll(List<Treillis> lf) {
+        for (Treillis f : lf) {
+            this.remove(f);
+        }
+    }
+
+    public void clear() {
+        List<Treillis> toRemove = new ArrayList<>(this.contient);
+        this.removeAll(toRemove);
+    }
+
+    public int size() {
+        return this.contient.size();
+    }
+
+    /**
+     * retourne le Treillis contenue dans le groupe la plus proche du point et au
+     * maximum à distMax du point; retourne null si aucun Treillis n'est à une
+     * distance plus faible que distMax;
+     */
+    public Treillis plusProche(Point p, double distMax) {
+        if (this.contient.isEmpty()) {
+            return null;
+        } else {
+            Treillis fmin = this.contient.get(0);
+            double min = fmin.distancePoint(p);
+            for (int i = 1; i < this.contient.size(); i++) {
+                Treillis fcur = this.contient.get(i);
+                double cur = fcur.distancePoint(p);
+                if (cur < min) {
+                    min = cur;
+                    fmin = fcur;
+                }
+            }
+            if (min <= distMax) {
+                return fmin;
+            } else {
+                return null;
+            }
+        }
+    }
+      
+        
+        public Treillis pointPlusProche(double clicX, double clicY, double distMax) {
+        
+        Point NoeudClic =  new Point(clicX, clicY);   
+         
+        if (this.contient.isEmpty()) {
+            return null;
+        } else {
+            Treillis fmin = this.contient.get(0);
+            double min = fmin.distancePoint(NoeudClic);
+            for (int i = 1; i < this.contient.size(); i++) {
+                Treillis fcur = this.contient.get(i);
+                double cur = fcur.distancePoint(NoeudClic);
+                if (cur < min) {
+                    min = cur;
+                    fmin = fcur;
+                }
+            }
+            if (min <= distMax) {
+                return fmin;
+            } else {
+                return null;
+            }
+        }
+    }
+      
+        
+        
+    public Point SegmentPlusProche(double clicX, double clicY, double distMax, TriangleTerrain TT) {
+        
+        double x1=TT.S1.getPx();
+        double y1=TT.S1.getPy();
+        
+        double x2=TT.S2.getPx();
+        double y2=TT.S2.getPy();
+        
+        double x3=TT.S3.getPx();
+        double y3=TT.S3.getPy();
+        
+        
+        double xMilieu12 = (x1+x2)/2;
+        double yMilieu12 = (y1+y2)/2;
+        double xMilieu13 = (x1+x3)/2;
+        double yMilieu13 = (y1+y3)/2;
+        double xMilieu23 = (x3+x2)/2;
+        double yMilieu23 = (y3+y2)/2;
+        
+        Point M12 = new Point(xMilieu12, yMilieu12);
+        Point M13 = new Point(xMilieu13, yMilieu13);
+        Point M23 = new Point(xMilieu23, yMilieu23);
+        
+        
+        Point NoeudClic =  new Point(clicX, clicY);   
+        
+        
+        if (M12.distancePoint(NoeudClic) < M13.distancePoint(NoeudClic) &&M12.distancePoint(NoeudClic) < M23.distancePoint(NoeudClic) ){
+            
+            NoeudClic.px = M12.px;
+            NoeudClic.py = M12.py;
+            
+        } else if (M13.distancePoint(NoeudClic) < M12.distancePoint(NoeudClic) &&M13.distancePoint(NoeudClic) < M23.distancePoint(NoeudClic) ){
+            
+            NoeudClic.px = M13.px;
+            NoeudClic.py = M13.py;
+            
+        } else {
+            
+            NoeudClic.px = M23.px;
+            NoeudClic.py = M23.py;
+            
+        }
+        return NoeudClic;
+        
+        
+    }
+    
+    
+    
+
+    /**
+     * crée un sous groupe avec les figures contenues dans lf. . les figures de
+     * lf doivent appartenir au groupe this. . un nouveau groupe sg est créé .
+     * les figures de lf sont retirées de this . les figures de lf sont ajoutées
+     * au nouveau groupe sg . le groupe sg est ajouté au groupe this
+     *
+     * @return le sous-groupe créé.
+     */
+    public Groupe sousGroupe(List<Treillis> lf) {
+        // verifie que les Treillis font actuellement partie du groupe
+        // et les enleve du groupe
+        for (int i = 0; i < lf.size(); i++) {
+            Treillis f = lf.get(i);
+            if (f.getGroupe() != this) {
+                throw new Error(f + " n'appartient pas au groupe " + this);
+            }
+            this.contient.remove(f);
+            f.setGroupe(null);
+        }
+        Groupe sg = new Groupe();
+        for (int i = 0; i < lf.size(); i++) {
+            sg.add(lf.get(i));
+        }
+        this.add(sg);
+        return sg;
+    }
+
+    public static String indente(String toIndente, String prefix) {
+        return prefix + toIndente.replaceAll("\n", "\n" + prefix);
+    }
+
+    @Override
+    public String toString() {
+        String res = "Groupe {\n";
+        for (int i = 0; i < this.contient.size(); i++) {
+            res = res + indente(this.contient.get(i).toString(), "  ") + "\n";
+        }
+        return res + "}";
+    }
+
+    public static Groupe groupeTest() {
+        Groupe res = new Groupe();
+        return res;
+    }
+
+    public Point choisiPoint() {
+        List<Point> lp = new ArrayList<>();
+        System.out.println("liste des points disponibles : ");
+        int nbr = 0;
+        for (int i = 0; i < this.contient.size(); i++) {
+            Treillis f = this.contient.get(i);
+            if (f instanceof Point) {
+                nbr++;
+                lp.add((Point) f);
+                System.out.println(nbr + ") " + f);
+            }
+        }
+        if (nbr == 0) {
+            System.out.println("Aucun point disponible");
+            return null;
+        } else {
+            int rep = -1;
+            while (rep < 0 || rep > nbr) {
+                System.out.println("votre choix (0 pour annuler) : ");
+                rep = Lire.i();
+            }
+            if (rep == 0) {
+                return null;
+            } else {
+                return lp.get(rep - 1);
+            }
+        }
+    }
+
+    public List<Treillis> choisiFigures() {
+        List<Treillis> res = new ArrayList<>();
+        int rep = -1;
+        while (rep != 0) {
+            System.out.println("liste des figures disponibles : ");
+            for (int i = 0; i < this.contient.size(); i++) {
+                System.out.println((i + 1) + ") " + this.contient.get(i));
+            }
+            System.out.println("votre choix (0 pour finir) : ");
+            rep = Lire.i();
+            if (rep > 0 && rep <= this.contient.size()) {
+                Treillis f = this.contient.get(rep - 1);
+                if (res.contains(f)) {
+                    System.out.println("déja selectionnée !!");
+                } else {
+                    res.add(f);
+                }
+                System.out.println(res.size() + " figure(s) séléctionnée(s)");
+            }
+        }
+        return res;
+    }
+
+    public void menuTexte() {
+        int rep = -1;
+        while (rep != 0) {
+            System.out.println("1) afficher le groupe");
+            System.out.println("2) ajouter un point");
+            System.out.println("3) ajouter un segment avec deux nouveaux points");
+            System.out.println("4) ajouter un segment sur deux points existants");
+            System.out.println("5) créer un sous-groupe");
+            System.out.println("6) afficher le rectangle englobant");
+            System.out.println("7) calculer la distance à un point");
+            System.out.println("8) retirer des figures du groupe");
+            System.out.println("0) quitter");
+            System.out.println("votre choix : ");
+            rep = Lire.i();
+            if (rep == 1) {
+                System.out.println(this);
+            } else if (rep == 2) {
+                Point np = Point.demandePoint();
+                this.add(np);
+            } else if (rep == 3) {
+                //Segment ns = Segment.demandeSegment();
+                //this.add(ns);
+            } else if (rep == 4) {
+                System.out.println("choisissez le début du segment");
+                Point deb = this.choisiPoint();
+                if (deb != null) {
+                    System.out.println("choisissez la fin du segment");
+                    Point fin = this.choisiPoint();
+                    //Segment ns = new Segment(deb, fin);
+                    //this.add(ns);
+                }
+            } else if (rep == 5) {
+                List<Treillis> select = this.choisiFigures();
+                this.sousGroupe(select);
+            } else if (rep == 6) {
+                System.out.println("maxX = " + this.maxX() + " ; "
+                        + "minX = " + this.minX() + "\n"
+                        + "maxY = " + this.maxY() + " ; "
+                        + "minY = " + this.minY() + "\n");
+            } else if (rep == 7) {
+                System.out.println("entrez un point :");
+                Point p = Point.demandePoint();
+                System.out.println("distance : " + this.distancePoint(p));
+            } else if (rep == 8) {
+                List<Treillis> select = this.choisiFigures();
+                this.removeAll(select);
+            }
+        }
+    }
+
+    public static void test1() {
+        System.out.println("groupe test : \n" + Groupe.groupeTest());
+    }
+
+    public static void testMenu() {
+        Groupe g = groupeTest();
+        g.menuTexte();
+    }
+
+    public static void exempleProblemeSauvegarde() {
+        Point p11 = new Point(1, 1);
+        Point p12 = new Point(2, 2);
+        Point p13 = new Point(2, 2);
+        Point p14 = new Point(3, 3);
+        //Segment s11 = new Segment(p11, p12);
+        //Segment s12 = new Segment(p13, p14);
+        Groupe gr1 = new Groupe();
+        //gr1.add(s11);
+       // gr1.add(s12);
+        Point p21 = new Point(1, 1);
+        Point p22 = new Point(2, 2);
+        Point p24 = new Point(3, 3);
+       // Segment s21 = new Segment(p21, p22);
+       // Segment s22 = new Segment(p22, p24);
+        Groupe gr2 = new Groupe();
+        //gr2.add(s21);
+        //gr2.add(s22);
+        gr2.add(gr1);
+        System.out.println("Groupe 1 : " + gr1);
+        System.out.println("Groupe 2 : " + gr2);
+        try {
+            gr1.sauvegarde(new File("groupe1.txt"));
+            gr2.sauvegarde(new File("groupe2.txt"));
+        } catch (IOException ex) {
+            throw new Error("probleme : " + ex.getMessage());
+        }
+    }
+
+    public static void testLecture() {
+        try {
+            Treillis lue = Treillis.lecture(new File("groupe2.txt"));
+            System.out.println("fig lue : " + lue);
+        } catch (IOException ex) {
+            throw new Error(ex);
+        }
+    }
+
+    public static void main(String[] args) {
+//        test1();
+//        testMenu();
+//        exempleProblemeSauvegarde();
+        testLecture();
+    }
+
+    /**
+     * abscice maximale d'un groupe de figures. 0 si le groupe est vide.
+     */
+    @Override
+    public double maxX() {
+        if (this.contient.isEmpty()) {
+            return 0;
+        } else {
+            double max = this.contient.get(0).maxX();
+            for (int i = 1; i < this.contient.size(); i++) {
+                double cur = this.contient.get(i).maxX();
+                if (cur > max) {
+                    max = cur;
+                }
+            }
+            return max;
+        }
+    }
+
+    /**
+     * abscice minimale d'un groupe de figures. 0 si le groupe est vide.
+     */
+    @Override
+    public double minX() {
+        if (this.contient.isEmpty()) {
+            return 0;
+        } else {
+            double min = this.contient.get(0).minX();
+            for (int i = 1; i < this.contient.size(); i++) {
+                double cur = this.contient.get(i).minX();
+                if (cur < min) {
+                    min = cur;
+                }
+            }
+            return min;
+        }
+    }
+
+    /**
+     * ordonnee maximale d'un groupe de figures. 0 si le groupe est vide.
+     */
+    @Override
+    public double maxY() {
+        if (this.contient.isEmpty()) {
+            return 0;
+        } else {
+            double max = this.contient.get(0).maxY();
+            for (int i = 1; i < this.contient.size(); i++) {
+                double cur = this.contient.get(i).maxY();
+                if (cur > max) {
+                    max = cur;
+                }
+            }
+            return max;
+        }
+    }
+
+    /**
+     * ordonnee minimale d'un groupe de figures. 0 si le groupe est vide.
+     */
+    @Override
+    public double minY() {
+        if (this.contient.isEmpty()) {
+            return 0;
+        } else {
+            double min = this.contient.get(0).minY();
+            for (int i = 1; i < this.contient.size(); i++) {
+                double cur = this.contient.get(i).minY();
+                if (cur < min) {
+                    min = cur;
+                }
+            }
+            return min;
+        }
+    }
+
+    @Override
+    public double distancePoint(Point p) {
+        if (this.contient.isEmpty()) {
+            return new Point(0, 0).distancePoint(p);
+        } else {
+            double dist = this.contient.get(0).distancePoint(p);
+            for (int i = 1; i < this.contient.size(); i++) {
+                double cur = this.contient.get(i).distancePoint(p);
+                if (cur < dist) {
+                    dist = cur;
+                }
+            }
+            return dist;
+        }
+    }
+
+    @Override
+    public void dessine(GraphicsContext context) {
+        for (Treillis f : this.contient) {
+            f.dessine(context);
+        }
+    }
+
+
+
+    
+
+    @Override
+    public void save(Writer w, Numeroteur<Treillis> num) throws IOException {
+        if (!num.objExist(this)) {
+            int id = num.creeID(this);
+            for (Treillis f : this.contient) {
+                f.save(w, num);
+            }
+            w.append("Groupe;" + id);
+            for (Treillis f : this.contient) {
+                w.append(";" + num.getID(f));
+            }
+            w.append("\n");
+}
+    }
+    
+    
+
+    
+}
